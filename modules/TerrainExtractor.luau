@@ -150,15 +150,13 @@ function TerrainExtractor:Extract(options)
 					end
 				end
 
-				-- Progress callback
-				if onProgress and processed % 10 == 0 then
-					onProgress(processed / totalChunks)
+				-- Progress callback every chunk so UI moves visibly
+				if onProgress then
+					onProgress(math.min(processed / totalChunks, 1))
 				end
 
-				-- Yield to prevent timeout
-				if processed % 5 == 0 then
-					task.wait()
-				end
+				-- Yield every chunk to prevent timeout
+				task.wait()
 			end
 		end
 	end
