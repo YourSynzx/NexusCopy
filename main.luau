@@ -18,7 +18,7 @@
 -- ============================================================
 
 local NEXUSCOPY_VERSION = "1.0.0"
-local REPO_BASE = "https://raw.githubusercontent.com/nightmarescriptsatu-png/NexusCopy/main/"
+local REPO_BASE = "https://raw.githubusercontent.com/YourSynzx/NexusCopy/main/"
 
 -- ============================================================
 -- Module Loader
