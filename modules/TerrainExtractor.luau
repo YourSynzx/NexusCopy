@@ -70,21 +70,40 @@ function TerrainExtractor:Extract(options)
 
 	-- Get terrain bounds
 	-- MaxExtents gives Region3int16, we need to convert to world coords
-	local ok, extents = pcall(function()
-		local maxExt = terrain.MaxExtents
-		return {
-			min = Vector3.new(maxExt.Min.X, maxExt.Min.Y, maxExt.Min.Z) * 4,
-			max = Vector3.new(maxExt.Max.X, maxExt.Max.Y, maxExt.Max.Z) * 4,
-		}
-	end)
+	local maxRadius = options.maxRadius or options.MaxRadius or 512
 
-	if not ok then
-		-- Fallback: use a reasonable default range
-		warn("[NexusCopy/Terrain] MaxExtents failed, using fallback bounds")
+	local extents
+	local player = game:GetService("Players").LocalPlayer
+	local playerPos = player and player.Character
+		and player.Character:FindFirstChild("HumanoidRootPart")
+		and player.Character.HumanoidRootPart.Position
+
+	-- Use actual used terrain bounds when available, else clamp around player
+	local cellOK, cellCount = pcall(function() return terrain:CountCells() end)
+
+	if playerPos then
 		extents = {
-			min = Vector3.new(-2048, -512, -2048),
-			max = Vector3.new(2048, 512, 2048),
+			min = Vector3.new(
+				playerPos.X - maxRadius,
+				playerPos.Y - maxRadius,
+				playerPos.Z - maxRadius),
+			max = Vector3.new(
+				playerPos.X + maxRadius,
+				playerPos.Y + maxRadius,
+				playerPos.Z + maxRadius),
 		}
+	else
+		warn("[NexusCopy/Terrain] No character found, using fallback bounds around origin")
+		extents = {
+			min = Vector3.new(-maxRadius, -maxRadius, -maxRadius),
+			max = Vector3.new(maxRadius, maxRadius, maxRadius),
+		}
+	end
+
+	if cellOK and (cellCount or 0) == 0 then
+		warn("[NexusCopy/Terrain] Terrain is empty, skipping scan")
+		stats.extractionTime = 0
+		return storedChunks
 	end
 
 	local minPos = extents.min
