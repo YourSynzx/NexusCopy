@@ -92,6 +92,7 @@ return function(userOptions)
 		ServerSpy = userOptions.ServerSpy or false,           -- default false (needs time)
 		ServerSpyDuration = userOptions.ServerSpyDuration or 60, -- seconds to monitor
 		DownloadAssets = userOptions.DownloadAssets or false,  -- generate download script
+		TerrainOptions = userOptions.TerrainOptions, -- {maxRadius = 512, chunkSize = 16, ...}
 	}
 
 	local startTime = os.clock()
@@ -246,6 +247,7 @@ return function(userOptions)
 		if ok and mod then
 			local terrainExtractor = mod
 			terrainExtractor:Extract({
+				TerrainOptions = options.TerrainOptions,
 				onProgress = function(pct)
 					updateUI(nil, 0.15 + pct * 0.15,
 						string.format("Terrain: %.0f%% — %d non-empty chunks",

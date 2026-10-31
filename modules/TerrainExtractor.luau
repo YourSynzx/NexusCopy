@@ -50,8 +50,10 @@ end
 --------------------------------------------------------------
 --- @param options {onProgress: (number) -> (), chunkSize: number?, resolution: number?}
 function TerrainExtractor:Extract(options)
-	options = options or {}
-	local chunkSize = options.chunkSize or 64
+	local opts = options.TerrainOptions or {}
+	opts.onProgress = opts.onProgress or options.onProgress
+	options = opts
+	local chunkSize = options.chunkSize or 16
 	local resolution = options.resolution or 4 -- Roblox min resolution
 	local onProgress = options.onProgress
 
@@ -109,6 +111,7 @@ function TerrainExtractor:Extract(options)
 	local minPos = extents.min
 	local maxPos = extents.max
 	local size = maxPos - minPos
+	local lastLog = os.clock()
 	stats.terrainSize = size
 
 	print(string.format("[NexusCopy/Terrain] Bounds: (%d,%d,%d) to (%d,%d,%d)",
@@ -172,6 +175,17 @@ function TerrainExtractor:Extract(options)
 				-- Progress callback every chunk so UI moves visibly
 				if onProgress then
 					onProgress(math.min(processed / totalChunks, 1))
+				end
+
+				-- Console heartbeat every 2s so Dev Console shows it's alive
+				local now = os.clock()
+				if now - lastLog >= 2 then
+					lastLog = now
+					local pct = processed / totalChunks * 100
+					local eta = pct > 0 and (os.clock() - startTime) / pct * (100 - pct) or 0
+					print(string.format("[NexusCopy/Terrain] Progress: %d/%d chunks (%.1f%%) — %d non-empty, %d voxels — ETA ~%dm%ds",
+						processed, totalChunks, pct, stats.nonEmptyChunks, stats.totalVoxels,
+						math.floor(eta / 60), math.floor(eta % 60)))
 				end
 
 				-- Yield every chunk to prevent timeout
